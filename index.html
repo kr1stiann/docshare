@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocShare – Säker dokumentdelning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --accent: #4f7cff;
+      --accent2: #00e5c0;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --danger: #ff4f6a;
+      --success: #00e5c0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(79,124,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .logo span { color: var(--accent); }
+
+    .nav-badge {
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 120px 24px 60px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 64px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 20px;
+      padding: 6px 14px;
+      border: 1px solid rgba(0,229,192,0.3);
+      border-radius: 4px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Auth card */
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .auth-card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+
+    label {
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    .btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #6b8fff; transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger {
+      background: transparent;
+      border: 1px solid rgba(255,79,106,0.3);
+      color: var(--danger);
+      font-size: 0.75rem;
+      padding: 8px 14px;
+    }
+
+    .btn-danger:hover { background: rgba(255,79,106,0.1); }
+
+    /* Status */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .status-dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+    /* Upload zone */
+    .upload-zone {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .upload-zone h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .drop-area {
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .drop-area:hover, .drop-area.dragover {
+      border-color: var(--accent);
+      background: rgba(79,124,255,0.05);
+    }
+
+    .drop-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .drop-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .drop-text strong { color: var(--accent); }
+
+    .upload-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      align-items: center;
+    }
+
+    .selected-file {
+      font-size: 0.8rem;
+      color: var(--accent2);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .progress-wrap.visible { display: block; }
+
+    .progress-bar-bg {
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .progress-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* File list */
+    .file-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .file-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .file-list-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .file-count {
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+
+    .file-item:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+
+    .file-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .file-info { flex: 1; min-width: 0; }
+
+    .file-name {
+      font-size: 0.85rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .file-actions { display: flex; gap: 8px; }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 20px;
+      font-size: 0.8rem;
+      z-index: 999;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 300px;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s 0.15s ease both;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .stat-value span { color: var(--accent); font-size: 1rem; }
+
+    /* Share modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      width: 100%;
+      max-width: 460px;
+      margin: 24px;
+    }
+
+    .modal h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .share-link {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      word-break: break-all;
+      margin-bottom: 16px;
+    }
+
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      main { padding: 100px 16px 40px; }
+      .form-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      .auth-card, .upload-zone, .file-list { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Doc<span>Share</span></div>
+  <div class="nav-badge">Azure · Secure</div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-tag">// Molnbaserad dokumenthantering</div>
+    <h1>Dela dokument<br/><em>säkert</em> i molnet</h1>
+    <p>En Azure-baserad tjänst för konsultbolag och småföretag – ladda upp, hantera och dela filer utan installation.</p>
+  </div>
+
+  <!-- Auth -->
+  <div class="auth-card">
+    <h2>// Autentisering (Azure AD)</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>E-postadress</label>
+        <input type="email" id="emailInput" placeholder="namn@foretag.se" value="kristian@docshare.se"/>
+      </div>
+      <div class="field">
+        <label>Lösenord</label>
+        <input type="password" id="passInput" placeholder="••••••••" value="••••••••"/>
+      </div>
+      <button class="btn btn-primary" onclick="login()">Logga in</button>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot active" id="authDot"></div>
+      <span id="authStatus">Inloggad som kristian@docshare.se – Azure AD autentiserad</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Lagrade filer</div>
+      <div class="stat-value" id="statFiles">3 <span>st</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Använt lagringsutrymme</div>
+      <div class="stat-value" id="statStorage">2.4 <span>MB</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Azure Blob Storage</div>
+      <div class="stat-value">●<span> Online</span></div>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-zone">
+    <h2>// Ladda upp dokument → Azure Blob Storage</h2>
+    <div class="drop-area" id="dropArea">
+      <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)"/>
+      <span class="drop-icon">📁</span>
+      <div class="drop-text">
+        <strong>Klicka eller dra filer hit</strong><br/>
+        PDF, DOCX, XLSX – max 50 MB per fil
+      </div>
+    </div>
+    <div class="upload-actions">
+      <span class="selected-file" id="selectedFileName">Ingen fil vald</span>
+      <button class="btn btn-primary" onclick="uploadFile()">Ladda upp</button>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Laddar upp till Azure Blob Storage...</div>
+    </div>
+  </div>
+
+  <!-- File list -->
+  <div class="file-list">
+    <div class="file-list-header">
+      <h2>// Dina dokument</h2>
+      <div class="file-count" id="fileCount">3 filer</div>
+    </div>
+    <div id="fileListBody"></div>
+  </div>
+</main>
+
+<!-- Share modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h3>Dela dokument</h3>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">Länken är skyddad via Azure API Management och kräver autentisering.</p>
+    <div class="share-link" id="shareLink"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeShare()">Stäng</button>
+      <button class="btn btn-primary" onclick="copyLink()">Kopiera länk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Demo file data
+  let files = [
+    { id: 1, name: 'Offert_Kund_AB_2026.pdf', size: '842 KB', type: 'pdf', uploaded: '2026-05-10 09:14', uploader: 'kristian@docshare.se' },
+    { id: 2, name: 'Konsultavtal_Q2.docx', size: '128 KB', type: 'docx', uploaded: '2026-05-11 14:32', uploader: 'kristian@docshare.se' },
+    { id: 3, name: 'Budget_2026.xlsx', size: '1.4 MB', type: 'xlsx', uploaded: '2026-05-12 08:55', uploader: 'kristian@docshare.se' },
+  ];
+
+  const icons = { pdf: '📄', docx: '📝', xlsx: '📊', default: '📎' };
+
+  function renderFiles() {
+    const body = document.getElementById('fileListBody');
+    document.getElementById('fileCount').textContent = files.length + ' filer';
+    document.getElementById('statFiles').innerHTML = files.length + ' <span>st</span>';
+
+    if (files.length === 0) {
+      body.innerHTML = '<div class="empty-state">Inga dokument uppladdade ännu.</div>';
+      return;
+    }
+
+    body.innerHTML = files.map(f => `
+      <div class="file-item" id="file-${f.id}">
+        <div class="file-icon">${icons[f.type] || icons.default}</div>
+        <div class="file-info">
+          <div class="file-name">${f.name}</div>
+          <div class="file-meta">${f.size} · ${f.uploaded} · ${f.uploader}</div>
+        </div>
+        <div class="file-actions">
+          <button class="btn-icon" onclick="shareFile(${f.id})">Dela</button>
+          <button class="btn-icon" onclick="downloadFile(${f.id})">Hämta</button>
+          <button class="btn btn-danger" onclick="deleteFile(${f.id})">Ta bort</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+      document.getElementById('selectedFileName').textContent = file.name;
+    }
+  }
+
+  // Drag and drop
+  const dropArea = document.getElementById('dropArea');
+  dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+  dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+  dropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('selectedFileName').textContent = file.name;
+      document.getElementById('fileInput').files = e.dataTransfer.files;
+    }
+  });
+
+  function uploadFile() {
+    const input = document.getElementById('fileInput');
+    const name = document.getElementById('selectedFileName').textContent;
+    if (name === 'Ingen fil vald') { showToast('Välj en fil först', 'error'); return; }
+
+    const wrap = document.getElementById('progressWrap');
+    const fill = document.getElementById('progressFill');
+    const label = document.getElementById('progressLabel');
+    wrap.classList.add('visible');
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15 + 5;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        label.textContent = '✓ Uppladdning klar – filen sparad i Azure Blob Storage';
+
+        const ext = name.split('.').pop().toLowerCase();
+        const newFile = {
+          id: Date.now(),
+          name: name,
+          size: Math.round(Math.random() * 900 + 100) + ' KB',
+          type: ext,
+          uploaded: new Date().toLocaleString('sv-SE').slice(0,16),
+          uploader: 'kristian@docshare.se'
+        };
+        files.unshift(newFile);
+        renderFiles();
+        showToast('Filen uppladdad till Azure Blob Storage', 'success');
+
+        setTimeout(() => {
+          wrap.classList.remove('visible');
+          fill.style.width = '0%';
+          document.getElementById('selectedFileName').textContent = 'Ingen fil vald';
+        }, 2000);
+      }
+      fill.style.width = progress + '%';
+    }, 120);
+  }
+
+  function deleteFile(id) {
+    files = files.filter(f => f.id !== id);
+    renderFiles();
+    showToast('Fil borttagen från Blob Storage', 'success');
+  }
+
+  function shareFile(id) {
+    const f = files.find(f => f.id === id);
+    document.getElementById('shareLink').textContent =
+      `https://docshare-api.azure-api.net/files/${id}/${encodeURIComponent(f.name)}?sv=2026&sig=xK9mZ...&se=2026-05-13T23%3A00%3A00Z`;
+    document.getElementById('shareModal').classList.add('open');
+  }
+
+  function closeShare() { document.getElementById('shareModal').classList.remove('open'); }
+
+  function copyLink() {
+    const link = document.getElementById('shareLink').textContent;
+    navigator.clipboard.writeText(link).catch(() => {});
+    showToast('Länk kopierad!', 'success');
+    closeShare();
+  }
+
+  function downloadFile(id) {
+    const f = files.find(f => f.id === id);
+    showToast(`Hämtar ${f.name} från Blob Storage...`, 'success');
+  }
+
+  function login() {
+    showToast('Inloggad via Azure Active Directory', 'success');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  renderFiles();
+</script>
+</body>
+</html>

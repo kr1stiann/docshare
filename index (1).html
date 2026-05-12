@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocShare – Säker dokumentdelning</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #f9f9f8; color: #111; min-height: 100vh; font-size: 15px; line-height: 1.6; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: #fff; border-bottom: 1px solid #e8e8e4; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 56px; }
+    .logo { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; color: #111; }
+    .nav-badge { font-size: 11px; color: #888; background: #f3f3f1; padding: 4px 10px; border-radius: 20px; border: 1px solid #e8e8e4; }
+    main { max-width: 640px; margin: 0 auto; padding: 96px 24px 80px; }
+    .hero { margin-bottom: 40px; }
+    .hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 12px; }
+    h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.8px; line-height: 1.2; color: #111; margin-bottom: 12px; }
+    .hero-sub { font-size: 15px; color: #888; max-width: 420px; line-height: 1.6; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat { background: #fff; border: 1px solid #e8e8e4; border-radius: 10px; padding: 16px 20px; }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 500; color: #111; letter-spacing: -0.5px; }
+    .stat-value.live { color: #2a7c4f; }
+    .card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+    .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; margin-bottom: 20px; }
+    .drop-area { border: 1px dashed #d8d8d4; border-radius: 8px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; background: #fafaf9; }
+    .drop-area:hover, .drop-area.over { border-color: #111; background: #f5f5f3; }
+    .drop-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { font-size: 24px; color: #ccc; display: block; margin-bottom: 10px; }
+    .drop-text { font-size: 14px; color: #888; }
+    .drop-text strong { color: #444; font-weight: 500; }
+    .drop-sub { font-size: 12px; color: #bbb; margin-top: 4px; }
+    .upload-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+    .selected-name { flex: 1; font-size: 13px; color: #bbb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .selected-name.active { color: #444; }
+    .btn-upload { font-size: 13px; font-weight: 500; padding: 9px 22px; background: #111; color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: background 0.15s; font-family: inherit; white-space: nowrap; }
+    .btn-upload:hover { background: #333; }
+    .btn-upload:disabled { background: #ccc; cursor: not-allowed; }
+    .progress-wrap { margin-top: 14px; display: none; }
+    .progress-wrap.show { display: block; }
+    .progress-track { background: #f0f0ee; border-radius: 4px; height: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #111; border-radius: 4px; width: 0%; transition: width 0.2s; }
+    .progress-label { font-size: 12px; color: #aaa; margin-top: 8px; }
+    .status-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; color: #bbb; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #2a7c4f; flex-shrink: 0; }
+    .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .file-count { font-size: 12px; color: #bbb; }
+    .file-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 8px; border: 1px solid transparent; transition: all 0.15s; margin-bottom: 6px; }
+    .file-item:hover { background: #fafaf9; border-color: #e8e8e4; }
+    .file-icon { width: 36px; height: 36px; background: #f3f3f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #888; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-size: 14px; font-weight: 500; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-meta { font-size: 12px; color: #bbb; margin-top: 2px; }
+    .file-actions { display: flex; gap: 6px; }
+    .btn-sm { font-size: 13px; padding: 6px 10px; border-radius: 6px; border: 1px solid #e8e8e4; background: transparent; color: #888; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .btn-sm:hover { border-color: #ccc; color: #444; }
+    .btn-sm.danger:hover { border-color: #f0a0a0; color: #c0392b; background: #fff5f5; }
+    .empty { text-align: center; padding: 40px 0; color: #bbb; font-size: 14px; }
+    .toast { position: fixed; bottom: 28px; right: 28px; background: #111; color: #fff; font-size: 13px; padding: 12px 18px; border-radius: 8px; z-index: 999; opacity: 0; transform: translateY(8px); transition: all 0.25s; max-width: 300px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: #c0392b; }
+    @media (max-width: 600px) { nav { padding: 0 20px; } main { padding: 80px 16px 60px; } h1 { font-size: 26px; } .stats-row { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">DocShare</span>
+  <span class="nav-badge">Azure · Blob Storage</span>
+</nav>
+
+<main>
+  <div class="hero">
+    <p class="hero-label">Dokumenthantering</p>
+    <h1>Dela dokument säkert<br/>i molnet.</h1>
+    <p class="hero-sub">En Azure-baserad tjänst för konsultbolag och småföretag – ladda upp och dela filer direkt i Azure Blob Storage.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-label">Lagrade filer</div>
+      <div class="stat-value" id="statFiles">–</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Blob Storage</div>
+      <div class="stat-value live">Live</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Container</div>
+      <div class="stat-value">documents</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-label">Ladda upp fil</p>
+    <div class="drop-area" id="dropArea">
+      <input type="file" id="fileInput" onchange="handleSelect(event)"/>
+      <i class="ti ti-upload drop-icon" aria-hidden="true"></i>
+      <div class="drop-text"><strong>Klicka eller dra filer hit</strong></div>
+      <p class="drop-sub">PDF, DOCX, XLSX – max 50 MB</p>
+    </div>
+    <div class="upload-row">
+      <span class="selected-name" id="selectedName">Ingen fil vald</span>
+      <button class="btn-upload" id="uploadBtn" onclick="uploadFile()">Ladda upp</button>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <p class="progress-label" id="progressLabel">Laddar upp till Azure Blob Storage...</p>
+    </div>
+    <div class="status-row">
+      <div class="dot"></div>
+      <span>Ansluten till Azure Blob Storage · container: documents</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="list-header">
+      <p class="card-label" style="margin-bottom:0">Dina dokument</p>
+      <span class="file-count" id="fileCount">Laddar...</span>
+    </div>
+    <div id="fileList"><div class="empty">Laddar filer från Azure...</div></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const iconMap = { pdf: 'ti-file-type-pdf', docx: 'ti-file-type-doc', doc: 'ti-file-type-doc', xlsx: 'ti-file-spreadsheet', xls: 'ti-file-spreadsheet', jpg: 'ti-photo', jpeg: 'ti-photo', png: 'ti-photo' };
+
+  async function loadFiles() {
+    try {
+      const res = await fetch('/api/files');
+      const data = await res.json();
+      if (data.success) renderFiles(data.files);
+      else { document.getElementById('fileList').innerHTML = '<div class="empty">Kunde inte ladda filer.</div>'; document.getElementById('fileCount').textContent = 'Fel'; }
+    } catch {
+      document.getElementById('fileList').innerHTML = '<div class="empty">Kunde inte ansluta till servern.</div>';
+      document.getElementById('fileCount').textContent = 'Fel';
+    }
+  }
+
+  function renderFiles(files) {
+    document.getElementById('statFiles').textContent = files.length;
+    document.getElementById('fileCount').textContent = files.length + (files.length === 1 ? ' fil' : ' filer');
+    const list = document.getElementById('fileList');
+    if (!files.length) { list.innerHTML = '<div class="empty">Inga dokument uppladdade ännu.</div>'; return; }
+    list.innerHTML = files.map(f => {
+      const ext = (f.type || '').toLowerCase();
+      const icon = iconMap[ext] || 'ti-file';
+      const date = new Date(f.uploaded).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `<div class="file-item">
+        <div class="file-icon"><i class="ti ${icon}" aria-hidden="true"></i></div>
+        <div class="file-info">
+          <div class="file-name">${f.name}</div>
+          <div class="file-meta">${f.size} · ${date} · Azure Blob Storage</div>
+        </div>
+        <div class="file-actions">
+          <button class="btn-sm" onclick="downloadFile('${f.id}')" title="Hämta"><i class="ti ti-download" aria-hidden="true"></i></button>
+          <button class="btn-sm danger" onclick="deleteFile('${f.id}')" title="Ta bort"><i class="ti ti-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function handleSelect(e) {
+    const file = e.target.files[0];
+    const el = document.getElementById('selectedName');
+    if (file) { el.textContent = file.name; el.classList.add('active'); }
+  }
+
+  const drop = document.getElementById('dropArea');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer(); dt.items.add(file);
+      document.getElementById('fileInput').files = dt.files;
+      const el = document.getElementById('selectedName');
+      el.textContent = file.name; el.classList.add('active');
+    }
+  });
+
+  async function uploadFile() {
+    const input = document.getElementById('fileInput');
+    if (!input.files[0]) { showToast('Välj en fil först', true); return; }
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true; btn.textContent = 'Laddar upp...';
+    const wrap = document.getElementById('progressWrap');
+    const fill = document.getElementById('progressFill');
+    const label = document.getElementById('progressLabel');
+    wrap.classList.add('show');
+    let p = 0;
+    const iv = setInterval(() => { p = Math.min(p + 8, 85); fill.style.width = p + '%'; }, 150);
+    try {
+      const fd = new FormData();
+      fd.append('file', input.files[0]);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      clearInterval(iv); fill.style.width = '100%';
+      if (data.success) {
+        label.textContent = '✓ Uppladdad till Azure Blob Storage';
+        showToast('Filen är uppladdad!');
+        const el = document.getElementById('selectedName');
+        el.textContent = 'Ingen fil vald'; el.classList.remove('active');
+        input.value = '';
+        setTimeout(() => { wrap.classList.remove('show'); fill.style.width = '0%'; }, 2000);
+        loadFiles();
+      } else { label.textContent = 'Fel: ' + data.error; showToast(data.error, true); }
+    } catch (err) { clearInterval(iv); showToast('Nätverksfel: ' + err.message, true); }
+    btn.disabled = false; btn.textContent = 'Ladda upp';
+  }
+
+  async function deleteFile(id) {
+    if (!confirm('Ta bort filen från Azure Blob Storage?')) return;
+    try {
+      const res = await fetch('/api/files/' + encodeURIComponent(id), { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) { showToast('Fil borttagen'); loadFiles(); }
+      else showToast(data.error, true);
+    } catch { showToast('Nätverksfel', true); }
+  }
+
+  function downloadFile(id) { window.location.href = '/api/files/' + encodeURIComponent(id) + '/download'; }
+
+  function showToast(msg, err = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (err ? ' error' : '');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  loadFiles();
+</script>
+</body>
+</html>
